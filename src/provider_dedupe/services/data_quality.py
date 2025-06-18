@@ -202,7 +202,7 @@ class DataQualityAnalyzer:
         scores = []
 
         # Score for missing values in critical fields
-        critical_missing_score = 100
+        critical_missing_score = 100.0
         for field in self.critical_fields:
             if field in missing_summary:
                 missing_pct = missing_summary[field]["percentage"]

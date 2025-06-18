@@ -283,7 +283,7 @@ class ProviderDeduplicator:
             "em_convergence": self.config.em_convergence,
         }
 
-    def _create_comparison(self, config: ComparisonConfig):
+    def _create_comparison(self, config: ComparisonConfig) -> Any:
         """Create Splink comparison from configuration.
 
         Args:

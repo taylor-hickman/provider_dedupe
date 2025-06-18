@@ -3,7 +3,7 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import structlog
 from structlog.stdlib import LoggerFactory
@@ -25,7 +25,7 @@ def setup_logging(
         >>> setup_logging("DEBUG", Path("app.log"), json_logs=True)
     """
     # Configure Python's logging
-    handlers = [logging.StreamHandler(sys.stdout)]
+    handlers: List[Union[logging.StreamHandler[Any], logging.FileHandler]] = [logging.StreamHandler(sys.stdout)]
     if log_file:
         handlers.append(logging.FileHandler(log_file))
 
@@ -36,7 +36,7 @@ def setup_logging(
     )
 
     # Configure structlog
-    processors = [
+    processors: List[Any] = [
         structlog.stdlib.filter_by_level,
         structlog.stdlib.add_logger_name,
         structlog.stdlib.add_log_level,
@@ -60,7 +60,7 @@ def setup_logging(
     )
 
 
-def get_logger(name: str) -> structlog.BoundLogger:
+def get_logger(name: str) -> Any:
     """Get a structured logger instance.
 
     Args:

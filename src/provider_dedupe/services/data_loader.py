@@ -1,7 +1,7 @@
 """Data loading service with support for multiple file formats."""
 
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 
@@ -121,7 +121,7 @@ class DataLoader:
         Returns:
             Loaded DataFrame
         """
-        params = {"dtype": str}
+        params: Dict[str, Any] = {"dtype": str}
         params.update(kwargs)
 
         return pd.read_json(file_path, **params)
