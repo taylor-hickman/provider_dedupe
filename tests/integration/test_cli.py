@@ -219,9 +219,12 @@ class TestCLIIntegration:
         output_dir = tmp_path / "viz"
 
         # Mock matplotlib to avoid actual plotting
-        with patch("matplotlib.pyplot.figure"), patch("matplotlib.pyplot.hist"), patch(
-            "matplotlib.pyplot.savefig"
-        ), patch("matplotlib.pyplot.close"):
+        with (
+            patch("matplotlib.pyplot.figure"),
+            patch("matplotlib.pyplot.hist"),
+            patch("matplotlib.pyplot.savefig"),
+            patch("matplotlib.pyplot.close"),
+        ):
 
             runner = CliRunner()
             result = runner.invoke(
