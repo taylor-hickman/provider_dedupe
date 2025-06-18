@@ -25,7 +25,9 @@ def setup_logging(
         >>> setup_logging("DEBUG", Path("app.log"), json_logs=True)
     """
     # Configure Python's logging
-    handlers: List[Union[logging.StreamHandler[Any], logging.FileHandler]] = [logging.StreamHandler(sys.stdout)]
+    handlers: List[Union[logging.StreamHandler[Any], logging.FileHandler]] = [
+        logging.StreamHandler(sys.stdout)
+    ]
     if log_file:
         handlers.append(logging.FileHandler(log_file))
 
