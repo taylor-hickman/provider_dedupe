@@ -189,7 +189,7 @@ class TestCLIIntegration:
         assert output_file.exists()
         
         # Check that HTML report was generated
-        html_file = tmp_path / "results.html"
+        html_file = tmp_path / "results_report.html"
         assert html_file.exists()
 
     def test_dedupe_command_file_not_found(self):

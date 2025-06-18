@@ -40,11 +40,7 @@ def cli(ctx: click.Context, debug: bool, log_file: Optional[str]) -> None:
 
 @cli.command()
 @click.argument("input_file", type=click.Path(exists=True, path_type=Path))
-@click.option(
-    "--output-dir",
-    type=click.Path(path_type=Path),
-    help="Output directory (default: auto-generated timestamped directory)",
-)
+@click.argument("output_file", type=click.Path(path_type=Path))
 @click.option(
     "--config",
     type=click.Path(exists=True, path_type=Path),
@@ -57,103 +53,69 @@ def cli(ctx: click.Context, debug: bool, log_file: Optional[str]) -> None:
     help="Match probability threshold (0.0-1.0)",
 )
 @click.option(
-    "--max-pairs",
-    type=int,
-    help="Maximum pairs for training",
+    "--output-format",
+    type=click.Choice(["csv", "excel", "json", "parquet"]),
+    default="csv",
+    help="Output format",
 )
 @click.option(
-    "--quick",
+    "--generate-report",
     is_flag=True,
-    help="Quick mode: ultra-strict deduplication for true duplicates only",
+    help="Generate HTML report with statistics",
+)
+@click.option(
+    "--blocking-rules",
+    type=str,
+    help="Custom blocking rules (JSON format)",
+)
+@click.option(
+    "--batch-size",
+    type=int,
+    default=50000,
+    help="Batch size for processing",
 )
 @click.pass_context
 def dedupe(
     ctx: click.Context,
     input_file: Path,
-    output_dir: Optional[Path],
+    output_file: Path,
     config: Optional[Path],
     threshold: float,
-    max_pairs: Optional[int],
-    quick: bool,
+    output_format: str,
+    generate_report: bool,
+    blocking_rules: Optional[str],
+    batch_size: int,
 ) -> None:
-    """Deduplicate provider records from INPUT_FILE with organized output.
-    
-    Creates a complete output directory with:
-    - Deduplicated CSV results  
-    - Interactive HTML report
-    - Visualizations and charts
-    - Configuration used
-    - Summary README
+    """Deduplicate provider records from INPUT_FILE to OUTPUT_FILE.
     
     Examples:
-        provider-dedupe dedupe providers.csv
-        provider-dedupe dedupe data.csv --threshold 0.90
-        provider-dedupe dedupe providers.csv --quick  # Ultra-strict mode
-        provider-dedupe dedupe data.csv --output-dir my_results/
+        provider-dedupe dedupe providers.csv deduplicated.csv
+        provider-dedupe dedupe providers.csv results.csv --threshold 0.90
+        provider-dedupe dedupe providers.csv output.xlsx --output-format excel
+        provider-dedupe dedupe providers.csv output.csv --generate-report
     """
     logger = ctx.obj["logger"]
     
     try:
-        # Import OutputManager here to avoid circular imports
-        import sys
-        sys.path.append(str(Path(__file__).parent.parent.parent.parent))
-        from output_manager import OutputManager
-        
-        # Initialize output manager
-        output_manager = OutputManager(input_file, output_dir)
-        
         # Load or create configuration
         if config:
             dedup_config = DeduplicationConfig.from_file(config)
-            config_data = dedup_config.model_dump()
-        elif quick:
-            # Use ultra-strict configuration for quick mode
-            config_data = {
-                "link_type": "dedupe_only",
-                "blocking_rules": [
-                    {
-                        "rule": "l.npi = r.npi AND l.family_name = r.family_name AND l.given_name = r.given_name AND l.postal_code = r.postal_code",
-                        "description": "Block only on exact NPI, name, and postal code match"
-                    }
-                ],
-                "comparisons": [
-                    {"column_name": "npi", "comparison_type": "exact", "term_frequency_adjustments": False},
-                    {"column_name": "given_name", "comparison_type": "exact", "term_frequency_adjustments": False},
-                    {"column_name": "family_name", "comparison_type": "exact", "term_frequency_adjustments": False},
-                    {"column_name": "street_address", "comparison_type": "jaro_winkler", "term_frequency_adjustments": False, "thresholds": [0.90, 0.98]},
-                    {"column_name": "postal_code", "comparison_type": "exact", "term_frequency_adjustments": False},
-                    {"column_name": "phone", "comparison_type": "exact", "term_frequency_adjustments": False}
-                ],
-                "max_iterations": 10,
-                "em_convergence": 0.001,
-                "match_threshold": 0.98,
-                "min_cluster_size": 2,
-                "max_pairs_for_training": 50000,
-                "chunk_size": 5000,
-                "use_parallel": True
-            }
-            dedup_config = DeduplicationConfig(**config_data)
-            click.echo("🚀 Using quick mode (ultra-strict): only true duplicates will be grouped")
         else:
-            dedup_config = DeduplicationConfig()
-            config_data = dedup_config.model_dump()
+            dedup_config = DeduplicationConfig(match_threshold=threshold)
         
-        # Override threshold if provided
-        if threshold != 0.95:  # Not default
-            dedup_config.match_threshold = threshold
-            config_data["match_threshold"] = threshold
-            
-        # Override max pairs if provided
-        if max_pairs:
-            dedup_config.max_pairs_for_training = max_pairs
-            config_data["max_pairs_for_training"] = max_pairs
+        # Parse blocking rules if provided
+        if blocking_rules:
+            import json
+            dedup_config.blocking_rules = json.loads(blocking_rules)
+        
+        # Update batch size
+        dedup_config.chunk_size = batch_size
         
         logger.info(
             "Starting deduplication",
             input_file=str(input_file),
-            output_dir=str(output_manager.output_dir),
+            output_file=str(output_file),
             threshold=dedup_config.match_threshold,
-            quick_mode=quick,
         )
         
         # Initialize deduplicator
@@ -172,17 +134,34 @@ def dedupe(
         click.echo("Performing deduplication...")
         results_df, statistics = deduplicator.deduplicate()
         
+        # Save results
+        from provider_dedupe.services.output_generator import OutputGenerator
+        output_gen = OutputGenerator()
+        
+        # Determine output format based on file extension if not specified
+        if output_format == "csv" and output_file.suffix.lower() in [".xlsx", ".xls"]:
+            output_format = "excel"
+        elif output_format == "csv" and output_file.suffix.lower() == ".json":
+            output_format = "json"
+        elif output_format == "csv" and output_file.suffix.lower() == ".parquet":
+            output_format = "parquet"
+        
+        # Save main results
+        output_gen.save(results_df, output_file, statistics)
+        
+        # Generate report if requested
+        if generate_report:
+            report_path = output_file.parent / f"{output_file.stem}_report.html"
+            output_gen.save(results_df, report_path, statistics)
+            click.echo(f"📊 HTML report saved to: {report_path}")
+        
         # Print summary
         click.echo("\n✅ Deduplication completed successfully!")
         click.echo(f"📊 Total records: {statistics['total_records']:,}")
         click.echo(f"🔍 Unique providers: {statistics['unique_clusters']:,}")
         click.echo(f"📋 Duplicates found: {statistics['duplicates_found']:,}")
         click.echo(f"📈 Duplication rate: {statistics['duplication_rate']:.1%}")
-        
-        # Create organized output
-        final_output_dir = output_manager.finalize(results_df, config_data, statistics)
-        
-        click.echo(f"\n🎉 Complete results package created: {final_output_dir}")
+        click.echo(f"\n💾 Results saved to: {output_file}")
         
     except ProviderDedupeError as e:
         logger.error("Deduplication failed", error=str(e), error_code=e.error_code)

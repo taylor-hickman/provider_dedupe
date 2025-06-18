@@ -405,3 +405,49 @@ class ProviderDeduplicator:
             "average_cluster_size": cluster_sizes.mean(),
             "clusters_by_size": cluster_sizes.value_counts().to_dict(),
         }
+
+    def run_deduplication(self, input_path: Union[str, Path]) -> Tuple[pd.DataFrame, Dict]:
+        """Run the complete deduplication pipeline.
+        
+        This is a convenience method that runs load_data, prepare_data, 
+        train_model, and deduplicate in sequence.
+        
+        Args:
+            input_path: Path to input data file
+            
+        Returns:
+            Tuple of (results_df, statistics)
+        """
+        logger.info("Starting complete deduplication pipeline", input_path=str(input_path))
+        
+        # Run the complete pipeline
+        self.load_data(input_path)
+        self.prepare_data()
+        self.train_model()
+        results_df, statistics = self.deduplicate()
+        
+        logger.info("Deduplication pipeline completed", 
+                   duplicates_found=statistics["duplicates_found"])
+        
+        return results_df, statistics
+
+    def save_results(self, 
+                    results_df: pd.DataFrame, 
+                    output_path: Union[str, Path], 
+                    format: str = "csv") -> None:
+        """Save deduplication results to file.
+        
+        Args:
+            results_df: Results DataFrame to save
+            output_path: Path to save the file
+            format: Output format ('csv', 'excel', 'json', 'parquet')
+        """
+        from provider_dedupe.services.output_generator import OutputGenerator
+        
+        output_gen = OutputGenerator()
+        output_gen.save(results_df, Path(output_path))
+        
+        logger.info("Results saved", 
+                   output_path=str(output_path), 
+                   format=format, 
+                   record_count=len(results_df))
