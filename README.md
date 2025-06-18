@@ -9,7 +9,7 @@ A command-line tool for deduplicating healthcare provider data using probabilist
 
 ## 📦 Installation
 
-### From PyPI (when published)
+### From PyPI
 ```bash
 pip install provider-dedupe
 ```
