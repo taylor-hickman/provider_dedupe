@@ -1,0 +1,49 @@
+{
+  "link_type": "dedupe_only",
+  "blocking_rules": [
+    {
+      "rule": "l.npi = r.npi AND l.family_name = r.family_name AND l.given_name = r.given_name AND l.postal_code = r.postal_code AND (l.phone = r.phone OR (length(l.phone) < 10 AND length(r.phone) < 10))",
+      "description": "Block on exact NPI, name, postal code, and phone (or both phones missing)"
+    }
+  ],
+  "comparisons": [
+    {
+      "column_name": "npi",
+      "comparison_type": "exact",
+      "term_frequency_adjustments": false
+    },
+    {
+      "column_name": "given_name",
+      "comparison_type": "exact",
+      "term_frequency_adjustments": false
+    },
+    {
+      "column_name": "family_name",
+      "comparison_type": "exact",
+      "term_frequency_adjustments": false
+    },
+    {
+      "column_name": "street_address",
+      "comparison_type": "jaro_winkler",
+      "term_frequency_adjustments": false,
+      "thresholds": [0.95, 0.99]
+    },
+    {
+      "column_name": "postal_code",
+      "comparison_type": "exact",
+      "term_frequency_adjustments": false
+    },
+    {
+      "column_name": "phone",
+      "comparison_type": "exact",
+      "term_frequency_adjustments": false
+    }
+  ],
+  "max_iterations": 10,
+  "em_convergence": 0.001,
+  "match_threshold": 0.98,
+  "min_cluster_size": 2,
+  "max_pairs_for_training": 50000,
+  "chunk_size": 5000,
+  "use_parallel": true
+}
