@@ -11,7 +11,7 @@ from provider_dedupe.core.config import DeduplicationConfig
 from provider_dedupe.core.deduplicator import ProviderDeduplicator
 from provider_dedupe.core.exceptions import DataValidationError, TrainingError
 from provider_dedupe.services.output_generator import OutputGenerator
-from tests.fixtures.sample_data import get_sample_dataframe, get_large_dataset
+from tests.fixtures.sample_data import get_large_dataset, get_sample_dataframe
 
 
 class TestFullPipeline:

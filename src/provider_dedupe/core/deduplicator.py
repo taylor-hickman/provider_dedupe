@@ -1,17 +1,17 @@
 """Core deduplication engine using Splink."""
 
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
 import pandas as pd
 from splink import DuckDBAPI, Linker
 from splink import comparison_library as cl
 
-from provider_dedupe.core.config import DeduplicationConfig, ComparisonConfig
+from provider_dedupe.core.config import ComparisonConfig, DeduplicationConfig
 from provider_dedupe.core.exceptions import (
-    DeduplicationError,
     DataValidationError,
+    DeduplicationError,
     TrainingError,
 )
 from provider_dedupe.models.provider import ProviderRecord
@@ -19,7 +19,6 @@ from provider_dedupe.services.data_loader import DataLoader
 from provider_dedupe.services.data_quality import DataQualityAnalyzer
 from provider_dedupe.utils.logging import get_logger
 from provider_dedupe.utils.normalization import TextNormalizer
-
 
 logger = get_logger(__name__)
 
@@ -219,7 +218,7 @@ class ProviderDeduplicator:
 
     def deduplicate(
         self, threshold: Optional[float] = None
-    ) -> Tuple[pd.DataFrame, Dict[str, any]]:
+    ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
         """Perform deduplication and return results.
 
         Args:
@@ -386,7 +385,7 @@ class ProviderDeduplicator:
 
         return errors
 
-    def _calculate_statistics(self, results_df: pd.DataFrame) -> Dict[str, any]:
+    def _calculate_statistics(self, results_df: pd.DataFrame) -> Dict[str, Any]:
         """Calculate deduplication statistics.
 
         Args:

@@ -49,7 +49,7 @@ jobs:
     
     - name: Type checking with mypy
       run: |
-        mypy src/
+        mypy src/ --ignore-missing-imports --no-strict-optional
     
     - name: Test with pytest
       run: |

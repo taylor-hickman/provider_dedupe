@@ -1,10 +1,10 @@
 """Provider data models with validation."""
 
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class AddressStatus(str, Enum):
@@ -138,7 +138,7 @@ class Provider(BaseModel):
         mode="before",
     )
     @classmethod
-    def handle_nan_values(cls, value):
+    def handle_nan_values(cls, value: Any) -> Any:
         """Convert NaN values to None for optional fields."""
         import math
 
@@ -156,7 +156,7 @@ class Provider(BaseModel):
         mode="before",
     )
     @classmethod
-    def handle_nan_required_fields(cls, value):
+    def handle_nan_required_fields(cls, value: Any) -> Any:
         """Convert NaN values to empty string for required fields, which will trigger validation error."""
         import math
 
@@ -229,4 +229,4 @@ class ProviderRecord(BaseModel):
         # Create provider instance
         provider = Provider(**mapped_data)
 
-        return cls(provider=provider)
+        return cls(provider=provider, match_probability=None)

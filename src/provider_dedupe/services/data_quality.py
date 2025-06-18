@@ -1,7 +1,7 @@
 """Data quality analysis service."""
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 
 import numpy as np
 import pandas as pd
@@ -18,7 +18,7 @@ class QualityMetrics:
     total_records: int
     duplicate_records: int
     missing_value_summary: Dict[str, Dict[str, float]]
-    field_statistics: Dict[str, Dict[str, any]]
+    field_statistics: Dict[str, Dict[str, Any]]
     data_quality_score: float
     recommendations: List[str] = field(default_factory=list)
 
@@ -134,7 +134,7 @@ class DataQualityAnalyzer:
 
     def _calculate_field_statistics(
         self, df: pd.DataFrame
-    ) -> Dict[str, Dict[str, any]]:
+    ) -> Dict[str, Dict[str, Any]]:
         """Calculate statistics for specific fields.
 
         Args:
@@ -240,7 +240,7 @@ class DataQualityAnalyzer:
         self,
         df: pd.DataFrame,
         missing_summary: Dict[str, Dict[str, float]],
-        field_stats: Dict[str, Dict[str, any]],
+        field_stats: Dict[str, Dict[str, Any]],
     ) -> List[str]:
         """Generate data quality improvement recommendations.
 

@@ -1,7 +1,8 @@
 """Sample data fixtures for testing."""
 
+from typing import Any, Dict, List
+
 import pandas as pd
-from typing import Dict, List, Any
 
 
 def _generate_valid_npi_for_dataset(index: int) -> str:
@@ -305,6 +306,7 @@ def get_large_dataset(size: int = 1000) -> pd.DataFrame:
         DataFrame with synthetic provider data
     """
     import random
+
     from faker import Faker
 
     fake = Faker()
