@@ -12,8 +12,8 @@ class BlockingRule(BaseModel):
 
     rule: str = Field(..., description="SQL blocking rule expression")
     description: Optional[str] = Field(None, description="Human-readable description")
-    
-    @field_validator('rule')
+
+    @field_validator("rule")
     @classmethod
     def validate_rule_not_empty(cls, value: str) -> str:
         """Validate that rule is not empty."""
@@ -33,17 +33,17 @@ class ComparisonConfig(BaseModel):
     thresholds: Optional[List[float]] = Field(
         None, description="Thresholds for distance-based comparisons"
     )
-    
-    @field_validator('column_name')
+
+    @field_validator("column_name")
     @classmethod
     def validate_column_name_not_empty(cls, value: str) -> str:
         """Validate that column_name is not empty."""
         if not value or not value.strip():
             raise ValueError("Column name cannot be empty")
         return value.strip()
-    
-    @field_validator('comparison_type')
-    @classmethod  
+
+    @field_validator("comparison_type")
+    @classmethod
     def validate_comparison_type_not_empty(cls, value: str) -> str:
         """Validate that comparison_type is not empty."""
         if not value or not value.strip():
@@ -65,9 +65,7 @@ class DeduplicationConfig(BaseModel):
     max_iterations: int = Field(
         default=20, description="Maximum EM algorithm iterations"
     )
-    em_convergence: float = Field(
-        default=0.001, description="EM convergence threshold"
-    )
+    em_convergence: float = Field(default=0.001, description="EM convergence threshold")
 
     # Deduplication parameters
     match_threshold: float = Field(
@@ -87,9 +85,7 @@ class DeduplicationConfig(BaseModel):
     chunk_size: int = Field(
         default=10_000, description="Chunk size for batch processing"
     )
-    use_parallel: bool = Field(
-        default=True, description="Enable parallel processing"
-    )
+    use_parallel: bool = Field(default=True, description="Enable parallel processing")
 
     @classmethod
     def from_file(cls, config_path: Path) -> "DeduplicationConfig":
@@ -143,18 +139,16 @@ class Settings(BaseSettings):
     # Data paths
     data_dir: Path = Field(default=Path("data"), description="Data directory")
     output_dir: Path = Field(default=Path("output"), description="Output directory")
-    temp_dir: Path = Field(default_factory=lambda: Path.cwd() / "temp", description="Temporary directory")
+    temp_dir: Path = Field(
+        default_factory=lambda: Path.cwd() / "temp", description="Temporary directory"
+    )
 
     # Database
-    database_url: Optional[str] = Field(
-        None, description="Database connection string"
-    )
+    database_url: Optional[str] = Field(None, description="Database connection string")
 
     # Performance
     max_workers: int = Field(default=4, description="Maximum worker threads")
-    memory_limit_gb: float = Field(
-        default=8.0, description="Memory limit in gigabytes"
-    )
+    memory_limit_gb: float = Field(default=8.0, description="Memory limit in gigabytes")
 
     @field_validator("log_level")
     @classmethod

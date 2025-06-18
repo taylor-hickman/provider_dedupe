@@ -49,21 +49,23 @@ class OutputGenerator:
             OutputError: If save operation fails
         """
         output_path = Path(output_path)
-        
+
         # Create output directory if needed
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Validate format
         if output_path.suffix.lower() not in self._formatters:
             raise OutputError(
                 f"Unsupported output format: {output_path.suffix}. "
                 f"Supported formats: {', '.join(self._formatters.keys())}"
             )
-        
+
         # Save file
         formatter = self._formatters[output_path.suffix.lower()]
         try:
-            logger.info("Saving output", path=str(output_path), format=output_path.suffix)
+            logger.info(
+                "Saving output", path=str(output_path), format=output_path.suffix
+            )
             formatter(data, output_path, statistics, **kwargs)
             logger.info("Output saved successfully", path=str(output_path))
         except Exception as e:
@@ -106,12 +108,12 @@ class OutputGenerator:
         with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
             # Write main data
             data.to_excel(writer, sheet_name="Deduplication Results", index=False)
-            
+
             # Write statistics if provided
             if statistics:
                 stats_df = self._statistics_to_dataframe(statistics)
                 stats_df.to_excel(writer, sheet_name="Statistics", index=False)
-                
+
                 # Write summary metrics
                 summary_data = {
                     "Metric": [
@@ -155,9 +157,9 @@ class OutputGenerator:
             "statistics": statistics or {},
             "records": data.to_dict(orient="records"),
         }
-        
+
         import json
-        
+
         with open(output_path, "w") as f:
             json.dump(output_data, f, indent=2, default=str)
 
@@ -197,7 +199,7 @@ class OutputGenerator:
         """
         template = kwargs.get("template", "default")
         max_rows = kwargs.get("max_rows", 100)
-        
+
         if template == "default":
             html_content = self._generate_default_html_report(
                 data, statistics, max_rows
@@ -207,7 +209,7 @@ class OutputGenerator:
             html_content = self._generate_custom_html_report(
                 data, statistics, template, max_rows
             )
-        
+
         with open(output_path, "w") as f:
             f.write(html_content)
 
@@ -228,10 +230,10 @@ class OutputGenerator:
             HTML content as string
         """
         stats = statistics or {}
-        
+
         # Get sample of large clusters
         large_clusters = data[data.get("cluster_size", 0) > 1].head(max_rows)
-        
+
         html = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -368,7 +370,7 @@ class OutputGenerator:
     </div>
 </body>
 </html>"""
-        
+
         return html
 
     def _generate_cluster_distribution_table(self, statistics: Dict[str, Any]) -> str:
@@ -383,14 +385,14 @@ class OutputGenerator:
         clusters_by_size = statistics.get("clusters_by_size", {})
         if not clusters_by_size:
             return "<p>No cluster distribution data available.</p>"
-        
+
         html = """<table>
             <tr>
                 <th>Cluster Size</th>
                 <th>Number of Clusters</th>
                 <th>Total Records</th>
             </tr>"""
-        
+
         for size, count in sorted(clusters_by_size.items()):
             total_records = size * count
             html += f"""
@@ -399,7 +401,7 @@ class OutputGenerator:
                 <td>{count:,}</td>
                 <td>{total_records:,}</td>
             </tr>"""
-        
+
         html += "</table>"
         return html
 
@@ -414,19 +416,25 @@ class OutputGenerator:
         """
         if data.empty:
             return "<p>No duplicate clusters found.</p>"
-        
+
         # Select columns to display
         display_columns = [
-            "cluster_id", "npi", "given_name", "family_name",
-            "city", "state", "phone", "cluster_size"
+            "cluster_id",
+            "npi",
+            "given_name",
+            "family_name",
+            "city",
+            "state",
+            "phone",
+            "cluster_size",
         ]
         available_columns = [col for col in display_columns if col in data.columns]
-        
+
         html = "<table><tr>"
         for col in available_columns:
             html += f"<th>{col.replace('_', ' ').title()}</th>"
         html += "</tr>"
-        
+
         for _, row in data.iterrows():
             html += "<tr>"
             for col in available_columns:
@@ -436,7 +444,7 @@ class OutputGenerator:
                 else:
                     html += f"<td>{value}</td>"
             html += "</tr>"
-        
+
         html += "</table>"
         return html
 
@@ -475,16 +483,20 @@ class OutputGenerator:
         for key, value in statistics.items():
             if isinstance(value, dict):
                 for sub_key, sub_value in value.items():
-                    rows.append({
-                        "Category": key,
-                        "Metric": sub_key,
-                        "Value": str(sub_value),
-                    })
+                    rows.append(
+                        {
+                            "Category": key,
+                            "Metric": sub_key,
+                            "Value": str(sub_value),
+                        }
+                    )
             else:
-                rows.append({
-                    "Category": "General",
-                    "Metric": key,
-                    "Value": str(value),
-                })
-        
+                rows.append(
+                    {
+                        "Category": "General",
+                        "Metric": key,
+                        "Value": str(value),
+                    }
+                )
+
         return pd.DataFrame(rows)

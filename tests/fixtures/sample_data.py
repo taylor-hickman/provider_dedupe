@@ -8,21 +8,29 @@ def _generate_valid_npi_for_dataset(index: int) -> str:
     """Generate a valid NPI for large dataset based on index."""
     # Use different base patterns to ensure variety while maintaining validity
     base_patterns = [
-        "123456789", "123456790", "123456791", "123456792", "123456793",
-        "123456794", "123456795", "123456796", "123456797", "123456798"
+        "123456789",
+        "123456790",
+        "123456791",
+        "123456792",
+        "123456793",
+        "123456794",
+        "123456795",
+        "123456796",
+        "123456797",
+        "123456798",
     ]
     base = base_patterns[index % len(base_patterns)]
-    
+
     # Luhn algorithm for NPI validation
     payload = [int(d) for d in base]
     for i in range(len(payload) - 1, -1, -2):
         payload[i] *= 2
         if payload[i] > 9:
             payload[i] -= 9
-    
+
     total = sum(payload) + 24  # 24 is the sum for the prefix 80840
     check_digit = (10 - (total % 10)) % 10
-    
+
     return base + str(check_digit)
 
 
@@ -30,21 +38,29 @@ def _generate_valid_group_npi_for_dataset(index: int) -> str:
     """Generate a valid group NPI for large dataset based on index."""
     # Use different base patterns for group NPIs
     base_patterns = [
-        "098765432", "098765433", "098765434", "098765435", "098765436",
-        "098765437", "098765438", "098765439", "098765440", "098765441"
+        "098765432",
+        "098765433",
+        "098765434",
+        "098765435",
+        "098765436",
+        "098765437",
+        "098765438",
+        "098765439",
+        "098765440",
+        "098765441",
     ]
     base = base_patterns[index % len(base_patterns)]
-    
+
     # Luhn algorithm for NPI validation
     payload = [int(d) for d in base]
     for i in range(len(payload) - 1, -1, -2):
         payload[i] *= 2
         if payload[i] > 9:
             payload[i] -= 9
-    
+
     total = sum(payload) + 24  # 24 is the sum for the prefix 80840
     check_digit = (10 - (total % 10)) % 10
-    
+
     return base + str(check_digit)
 
 
@@ -281,19 +297,19 @@ def get_normalized_results_data() -> List[Dict[str, Any]]:
 
 def get_large_dataset(size: int = 1000) -> pd.DataFrame:
     """Generate a larger synthetic dataset for performance testing.
-    
+
     Args:
         size: Number of records to generate
-        
+
     Returns:
         DataFrame with synthetic provider data
     """
     import random
     from faker import Faker
-    
+
     fake = Faker()
     fake.seed_instance(42)  # For reproducible results
-    
+
     data = []
     for i in range(size):
         # Generate some duplicates
@@ -302,7 +318,9 @@ def get_large_dataset(size: int = 1000) -> pd.DataFrame:
             base_record = data[i - random.randint(1, min(9, i))]
             record = base_record.copy()
             # Add slight variations
-            record["firstname"] = record["firstname"] + random.choice(["", " Jr", " Sr"])
+            record["firstname"] = record["firstname"] + random.choice(
+                ["", " Jr", " Sr"]
+            )
             record["address1"] = record["address1"].replace("St", "Street")
             # Ensure phone remains 10 digits
             if len(record["phone"]) >= 10:
@@ -320,16 +338,26 @@ def get_large_dataset(size: int = 1000) -> pd.DataFrame:
                 "state": fake.state_abbr(),
                 "zipcode": fake.zipcode(),
                 "phone": fake.numerify("##########"),  # Generate exactly 10 digits
-                "gnpi": _generate_valid_group_npi_for_dataset(i) if i % 3 == 0 else None,
+                "gnpi": (
+                    _generate_valid_group_npi_for_dataset(i) if i % 3 == 0 else None
+                ),
                 "group_name": fake.company() if i % 3 == 0 else None,
-                "primary_spec_desc": random.choice([
-                    "Internal Medicine", "Family Medicine", "Cardiology",
-                    "Dermatology", "Pediatrics", "Surgery"
-                ]),
-                "address_status": random.choice(["verified", "inconclusive", "invalid"]),
+                "primary_spec_desc": random.choice(
+                    [
+                        "Internal Medicine",
+                        "Family Medicine",
+                        "Cardiology",
+                        "Dermatology",
+                        "Pediatrics",
+                        "Surgery",
+                    ]
+                ),
+                "address_status": random.choice(
+                    ["verified", "inconclusive", "invalid"]
+                ),
                 "phone_status": random.choice(["verified", "inconclusive", "invalid"]),
             }
-        
+
         data.append(record)
-    
+
     return pd.DataFrame(data)

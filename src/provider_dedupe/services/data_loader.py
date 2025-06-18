@@ -49,24 +49,26 @@ class DataLoader:
             DataLoadError: If file cannot be loaded
         """
         file_path = Path(file_path)
-        
+
         # Validate file exists
         if not file_path.exists():
             raise DataLoadError(f"File not found: {file_path}")
-        
+
         # Validate file format
         if file_path.suffix.lower() not in self.SUPPORTED_FORMATS:
             raise DataLoadError(
                 f"Unsupported file format: {file_path.suffix}. "
                 f"Supported formats: {', '.join(self.SUPPORTED_FORMATS)}"
             )
-        
+
         # Load file
         loader = self._loaders[file_path.suffix.lower()]
         try:
             logger.info("Loading file", path=str(file_path), format=file_path.suffix)
             df = loader(file_path, **kwargs)
-            logger.info("File loaded successfully", rows=len(df), columns=len(df.columns))
+            logger.info(
+                "File loaded successfully", rows=len(df), columns=len(df.columns)
+            )
             return df
         except Exception as e:
             raise DataLoadError(f"Failed to load file {file_path}: {e}")
@@ -88,7 +90,7 @@ class DataLoader:
             "keep_default_na": True,
         }
         params.update(kwargs)
-        
+
         return pd.read_csv(file_path, **params)
 
     def _load_excel(self, file_path: Path, **kwargs: Dict) -> pd.DataFrame:
@@ -106,7 +108,7 @@ class DataLoader:
             "na_values": ["null", "NULL", "None", "NONE", ""],
         }
         params.update(kwargs)
-        
+
         return pd.read_excel(file_path, **params)
 
     def _load_json(self, file_path: Path, **kwargs: Dict) -> pd.DataFrame:
@@ -121,7 +123,7 @@ class DataLoader:
         """
         params = {"dtype": str}
         params.update(kwargs)
-        
+
         return pd.read_json(file_path, **params)
 
     def _load_parquet(self, file_path: Path, **kwargs: Dict) -> pd.DataFrame:
@@ -156,15 +158,15 @@ class DataLoader:
             DataLoadError: If any file cannot be loaded
         """
         dataframes = []
-        
+
         for file_path in file_paths:
             df = self.load(file_path, **kwargs)
             dataframes.append(df)
-        
+
         if concat:
             logger.info("Concatenating dataframes", count=len(dataframes))
             return pd.concat(dataframes, ignore_index=True)
-        
+
         return dataframes
 
     def validate_schema(
@@ -184,13 +186,13 @@ class DataLoader:
             List of validation error messages (empty if valid)
         """
         errors = []
-        
+
         # Check required columns
         if required_columns:
             missing_columns = set(required_columns) - set(df.columns)
             if missing_columns:
                 errors.append(f"Missing required columns: {missing_columns}")
-        
+
         # Check column types
         if column_types:
             for column, expected_type in column_types.items():
@@ -201,5 +203,5 @@ class DataLoader:
                             f"Column '{column}' has type {actual_type}, "
                             f"expected {expected_type}"
                         )
-        
+
         return errors

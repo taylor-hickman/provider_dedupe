@@ -146,11 +146,13 @@ def deduplication_config() -> DeduplicationConfig:
 def mock_data_loader() -> Mock:
     """Mock data loader for testing."""
     mock = Mock()
-    mock.load.return_value = pd.DataFrame({
-        "npi": ["1234567893", "1234567901"],
-        "firstname": ["John", "Jane"],
-        "lastname": ["Smith", "Doe"],
-    })
+    mock.load.return_value = pd.DataFrame(
+        {
+            "npi": ["1234567893", "1234567901"],
+            "firstname": ["John", "Jane"],
+            "lastname": ["Smith", "Doe"],
+        }
+    )
     return mock
 
 
@@ -158,7 +160,7 @@ def mock_data_loader() -> Mock:
 def mock_quality_analyzer() -> Mock:
     """Mock quality analyzer for testing."""
     from provider_dedupe.services.data_quality import QualityMetrics
-    
+
     mock = Mock()
     mock.analyze.return_value = QualityMetrics(
         total_records=100,
@@ -183,7 +185,7 @@ def temp_csv_file(tmp_path: Path, sample_dataframe: pd.DataFrame) -> Path:
 def temp_config_file(tmp_path: Path, deduplication_config: DeduplicationConfig) -> Path:
     """Create a temporary configuration file for testing."""
     import json
-    
+
     config_path = tmp_path / "test_config.json"
     with open(config_path, "w") as f:
         json.dump(deduplication_config.model_dump(), f)
@@ -194,7 +196,7 @@ def temp_config_file(tmp_path: Path, deduplication_config: DeduplicationConfig) 
 def setup_test_logging():
     """Setup minimal logging for tests."""
     import logging
-    
+
     logging.basicConfig(level=logging.CRITICAL)  # Suppress most log output
     yield
     # Cleanup handled automatically

@@ -87,7 +87,7 @@ jobs:
         safety check --json --output safety-report.json || true
     
     - name: Upload security reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: security-reports
         path: |
@@ -123,7 +123,7 @@ jobs:
         twine check dist/*
     
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dist
         path: dist/
@@ -131,7 +131,7 @@ jobs:
   docker:
     needs: [test, security]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.DOCKERHUB_USERNAME
     
     steps:
     - uses: actions/checkout@v4
@@ -151,7 +151,7 @@ jobs:
         context: .
         push: true
         tags: |
-          yourorg/provider-dedupe:latest
-          yourorg/provider-dedupe:${{ github.sha }}
+          taylor-hickman/provider-dedupe:latest
+          taylor-hickman/provider-dedupe:${{ github.sha }}
         cache-from: type=gha
         cache-to: type=gha,mode=max

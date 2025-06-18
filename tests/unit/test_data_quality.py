@@ -14,12 +14,14 @@ class TestDataQualityAnalyzer:
         """Test analysis of clean data."""
         df = get_sample_dataframe()
         analyzer = DataQualityAnalyzer()
-        
+
         metrics = analyzer.analyze(df)
-        
+
         assert isinstance(metrics, QualityMetrics)
         assert metrics.total_records == len(df)
-        assert metrics.data_quality_score > 70  # Sample data has intentional duplicates for testing
+        assert (
+            metrics.data_quality_score > 70
+        )  # Sample data has intentional duplicates for testing
         assert isinstance(metrics.missing_value_summary, dict)
         assert isinstance(metrics.field_statistics, dict)
 
@@ -27,9 +29,9 @@ class TestDataQualityAnalyzer:
         """Test analysis of data with quality issues."""
         df = pd.DataFrame(get_quality_issues_data())
         analyzer = DataQualityAnalyzer()
-        
+
         metrics = analyzer.analyze(df)
-        
+
         assert metrics.total_records == len(df)
         assert metrics.data_quality_score < 80  # Should be lower for problematic data
         assert len(metrics.missing_value_summary) > 0  # Should detect missing values
@@ -39,9 +41,9 @@ class TestDataQualityAnalyzer:
         """Test duplicate counting functionality."""
         df = get_sample_dataframe()
         analyzer = DataQualityAnalyzer()
-        
+
         duplicate_count = analyzer._count_duplicates(df)
-        
+
         # Should detect the duplicate NPI record
         assert duplicate_count > 0
 
@@ -49,12 +51,18 @@ class TestDataQualityAnalyzer:
         """Test missing value analysis."""
         df = pd.DataFrame(get_quality_issues_data())
         analyzer = DataQualityAnalyzer()
-        
+
         missing_summary = analyzer._analyze_missing_values(df)
-        
+
         assert isinstance(missing_summary, dict)
         # Should detect missing values in various columns
-        expected_columns_with_missing = ["firstname", "lastname", "address1", "zipcode", "phone"]
+        expected_columns_with_missing = [
+            "firstname",
+            "lastname",
+            "address1",
+            "zipcode",
+            "phone",
+        ]
         for col in expected_columns_with_missing:
             if col in missing_summary:
                 assert missing_summary[col]["count"] > 0
@@ -64,16 +72,16 @@ class TestDataQualityAnalyzer:
         """Test field statistics calculation."""
         df = pd.DataFrame(get_quality_issues_data())
         analyzer = DataQualityAnalyzer()
-        
+
         stats = analyzer._calculate_field_statistics(df)
-        
+
         assert isinstance(stats, dict)
-        
+
         # Check address status statistics
         if "address_status" in stats:
             assert isinstance(stats["address_status"], dict)
             assert "inconclusive" in stats["address_status"]
-        
+
         # Check phone validity statistics
         if "phone_validity" in stats:
             assert "valid_count" in stats["phone_validity"]
@@ -84,12 +92,14 @@ class TestDataQualityAnalyzer:
         # Test with clean data
         clean_df = get_sample_dataframe()
         analyzer = DataQualityAnalyzer()
-        
+
         missing_summary = analyzer._analyze_missing_values(clean_df)
         duplicate_count = analyzer._count_duplicates(clean_df)
-        
-        score = analyzer._calculate_quality_score(clean_df, missing_summary, duplicate_count)
-        
+
+        score = analyzer._calculate_quality_score(
+            clean_df, missing_summary, duplicate_count
+        )
+
         assert isinstance(score, float)
         assert 0 <= score <= 100
         assert score > 70  # Clean data should have high score
@@ -98,12 +108,14 @@ class TestDataQualityAnalyzer:
         """Test recommendation generation for clean data."""
         df = get_sample_dataframe()
         analyzer = DataQualityAnalyzer()
-        
+
         missing_summary = analyzer._analyze_missing_values(df)
         field_stats = analyzer._calculate_field_statistics(df)
-        
-        recommendations = analyzer._generate_recommendations(df, missing_summary, field_stats)
-        
+
+        recommendations = analyzer._generate_recommendations(
+            df, missing_summary, field_stats
+        )
+
         # Clean data should have fewer recommendations
         assert isinstance(recommendations, list)
 
@@ -111,12 +123,14 @@ class TestDataQualityAnalyzer:
         """Test recommendation generation for problematic data."""
         df = pd.DataFrame(get_quality_issues_data())
         analyzer = DataQualityAnalyzer()
-        
+
         missing_summary = analyzer._analyze_missing_values(df)
         field_stats = analyzer._calculate_field_statistics(df)
-        
-        recommendations = analyzer._generate_recommendations(df, missing_summary, field_stats)
-        
+
+        recommendations = analyzer._generate_recommendations(
+            df, missing_summary, field_stats
+        )
+
         # Problematic data should have multiple recommendations
         assert isinstance(recommendations, list)
         assert len(recommendations) > 0
@@ -126,10 +140,10 @@ class TestDataQualityAnalyzer:
         df = get_sample_dataframe()
         analyzer = DataQualityAnalyzer()
         metrics = analyzer.analyze(df)
-        
+
         report_path = tmp_path / "quality_report.md"
         report_content = analyzer.generate_report(metrics, str(report_path))
-        
+
         assert isinstance(report_content, str)
         assert "Data Quality Report" in report_content
         assert str(metrics.total_records) in report_content
@@ -141,17 +155,22 @@ class TestDataQualityAnalyzer:
         data = [
             {"npi": "", "firstname": "John", "lastname": "Smith"},  # Missing NPI
             {"npi": "1234567893", "firstname": "", "lastname": "Smith"},  # Missing name
-            {"npi": "1234567901", "firstname": "Jane", "lastname": ""},  # Missing lastname
+            {
+                "npi": "1234567901",
+                "firstname": "Jane",
+                "lastname": "",
+            },  # Missing lastname
         ]
         df = pd.DataFrame(data)
         analyzer = DataQualityAnalyzer()
-        
+
         metrics = analyzer.analyze(df)
-        
+
         # Should detect critical field issues
         assert len(metrics.missing_value_summary) > 0
         critical_issues = [
-            field for field, info in metrics.missing_value_summary.items()
+            field
+            for field, info in metrics.missing_value_summary.items()
             if info.get("is_critical", False)
         ]
         assert len(critical_issues) > 0
@@ -160,16 +179,16 @@ class TestDataQualityAnalyzer:
         """Test phone number validity analysis."""
         data = [
             {"phone": "2175551234"},  # Valid 10-digit
-            {"phone": "217555123"},   # Invalid 9-digit
-            {"phone": "12175551234"}, # Valid 11-digit
-            {"phone": "123"},         # Invalid short
-            {"phone": ""},            # Missing
+            {"phone": "217555123"},  # Invalid 9-digit
+            {"phone": "12175551234"},  # Valid 11-digit
+            {"phone": "123"},  # Invalid short
+            {"phone": ""},  # Missing
         ]
         df = pd.DataFrame(data)
         analyzer = DataQualityAnalyzer()
-        
+
         stats = analyzer._calculate_field_statistics(df)
-        
+
         if "phone_validity" in stats:
             phone_stats = stats["phone_validity"]
             assert "valid_count" in phone_stats
@@ -180,14 +199,17 @@ class TestDataQualityAnalyzer:
     def test_state_distribution_analysis(self):
         """Test state distribution analysis."""
         data = [
-            {"state": "IL"}, {"state": "IL"}, {"state": "IL"},  # 3 IL records
-            {"state": "CA"}, {"state": "NY"},  # 1 each CA, NY
+            {"state": "IL"},
+            {"state": "IL"},
+            {"state": "IL"},  # 3 IL records
+            {"state": "CA"},
+            {"state": "NY"},  # 1 each CA, NY
         ]
         df = pd.DataFrame(data)
         analyzer = DataQualityAnalyzer()
-        
+
         stats = analyzer._calculate_field_statistics(df)
-        
+
         if "state_distribution" in stats:
             state_stats = stats["state_distribution"]
             assert "unique_states" in state_stats
@@ -205,7 +227,7 @@ class TestDataQualityAnalyzer:
             data_quality_score=85.5,
             recommendations=["Fix missing values"],
         )
-        
+
         assert metrics.total_records == 100
         assert metrics.duplicate_records == 10
         assert metrics.data_quality_score == 85.5
@@ -216,7 +238,7 @@ class TestDataQualityAnalyzer:
     def test_analyzer_initialization(self):
         """Test analyzer initialization with default settings."""
         analyzer = DataQualityAnalyzer()
-        
+
         assert hasattr(analyzer, "critical_fields")
         assert hasattr(analyzer, "quality_thresholds")
         assert "npi" in analyzer.critical_fields

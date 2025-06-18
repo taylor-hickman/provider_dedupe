@@ -184,7 +184,7 @@ class TestProviderRecord:
     def test_from_dict_legacy_mapping(self, sample_provider_data):
         """Test creating provider record from legacy data format."""
         record = ProviderRecord.from_dict(sample_provider_data)
-        
+
         assert record.provider.npi == "1234567893"
         assert record.provider.first_name == "John"
         assert record.provider.last_name == "Smith"
@@ -203,7 +203,7 @@ class TestProviderRecord:
             "phone": "null",  # String null
             "group_npi": None,  # Actual None
         }
-        
+
         record = ProviderRecord.from_dict(data)
         assert record.provider.phone is None
         assert record.provider.group_npi is None
@@ -239,7 +239,7 @@ class TestProviderRecord:
             match_probability=0.98,
             is_primary=True,
         )
-        
+
         assert record.cluster_id == "cluster_123"
         assert record.match_probability == 0.98
         assert record.is_primary is True

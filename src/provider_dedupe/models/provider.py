@@ -87,7 +87,7 @@ class Provider(BaseModel):
         """Convert address type to lowercase."""
         return value.lower() if isinstance(value, str) else value
 
-    @field_validator("address_status", mode="before") 
+    @field_validator("address_status", mode="before")
     @classmethod
     def validate_address_status(cls, value: str) -> str:
         """Convert address status to lowercase."""
@@ -127,29 +127,44 @@ class Provider(BaseModel):
             raise ValueError(f"Invalid NPI checksum: {value}")
 
         return value
-    
-    @field_validator('group_npi', 'group_name', 'specialty', 'middle_name', 'address_line_2', 'phone', mode='before')
+
+    @field_validator(
+        "group_npi",
+        "group_name",
+        "specialty",
+        "middle_name",
+        "address_line_2",
+        "phone",
+        mode="before",
+    )
     @classmethod
     def handle_nan_values(cls, value):
         """Convert NaN values to None for optional fields."""
         import math
+
         if isinstance(value, float) and math.isnan(value):
             return None
         return value
 
-    @field_validator('first_name', 'last_name', 'address_line_1', 'city', 'state', 'postal_code', mode='before')
+    @field_validator(
+        "first_name",
+        "last_name",
+        "address_line_1",
+        "city",
+        "state",
+        "postal_code",
+        mode="before",
+    )
     @classmethod
     def handle_nan_required_fields(cls, value):
         """Convert NaN values to empty string for required fields, which will trigger validation error."""
         import math
+
         if isinstance(value, float) and math.isnan(value):
             return ""
         return value
 
-    model_config = ConfigDict(
-        json_encoders={UUID: str},
-        use_enum_values=True
-    )
+    model_config = ConfigDict(json_encoders={UUID: str}, use_enum_values=True)
 
 
 class ProviderRecord(BaseModel):
@@ -213,5 +228,5 @@ class ProviderRecord(BaseModel):
 
         # Create provider instance
         provider = Provider(**mapped_data)
-        
+
         return cls(provider=provider)
